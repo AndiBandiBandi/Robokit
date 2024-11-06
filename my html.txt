@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Joystick</title>
+    <style>
+        /* Joystick container */
+        .joystick-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background-color: #eee;
+            border: 2px solid #ccc;
+            margin: 20px auto;
+        }
+        
+        /* Joystick knob */
+        .joystick-knob {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #3498db;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+        }
+        
+        /* Display coordinates */
+        .coordinates {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Joystick Area -->
+    <div class="joystick-container" id="joystickContainer">
+        <div class="joystick-knob" id="joystickKnob"></div>
+    </div>
+
+    <!-- Coordinates Display -->
+    <div class="coordinates">
+        <p>X: <span id="xCoord">0</span></p>
+        <p>Y: <span id="yCoord">0</span></p>
+    </div>
+
+    <script>
+        // Get joystick elements
+        const joystickContainer = document.getElementById("joystickContainer");
+        const joystickKnob = document.getElementById("joystickKnob");
+        const xCoord = document.getElementById("xCoord");
+        const yCoord = document.getElementById("yCoord");
+
+        // Initial coordinates
+        const containerCenter = { x: joystickContainer.offsetWidth / 2, y: joystickContainer.offsetHeight / 2 };
+        
+        let isDragging = false;
+
+        // Start dragging
+        joystickKnob.addEventListener("mousedown", (e) => {
+            isDragging = true;
+            document.addEventListener("mousemove", onDrag);
+            document.addEventListener("mouseup", stopDrag);
+        });
+
+        // Handle dragging
+        function onDrag(e) {
+            if (!isDragging) return;
+
+            const rect = joystickContainer.getBoundingClientRect();
+            let offsetX = e.clientX - rect.left;
+            let offsetY = e.clientY - rect.top;
+
+            // Calculate distance from center
+            let dx = offsetX - containerCenter.x;
+            let dy = offsetY - containerCenter.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Restrict knob movement within container
+            const maxDistance = joystickContainer.offsetWidth / 2 - joystickKnob.offsetWidth / 2;
+            if (distance > maxDistance) {
+                const angle = Math.atan2(dy, dx);
+                dx = maxDistance * Math.cos(angle);
+                dy = maxDistance * Math.sin(angle);
+                offsetX = containerCenter.x + dx;
+                offsetY = containerCenter.y + dy;
+            }
+
+            // Update knob position
+            joystickKnob.style.left = `${offsetX}px`;
+            joystickKnob.style.top = `${offsetY}px`;
+
+            // Update coordinates
+            xCoord.textContent = dx.toFixed(0);
+            yCoord.textContent = (-dy).toFixed(0);  // Invert Y for standard coordinate orientation
+        }
+
+        // Stop dragging
+        function stopDrag() {
+            isDragging = false;
+            document.removeEventListener("mousemove", onDrag);
+            document.removeEventListener("mouseup", stopDrag);
+
+            // Reset joystick position to center
+            joystickKnob.style.left = `${containerCenter.x}px`;
+            joystickKnob.style.top = `${containerCenter.y}px`;
+            xCoord.textContent = 0;
+            yCoord.textContent = 0;
+        }
+        
+        // Initial center knob position
+        joystickKnob.style.left = `${containerCenter.x}px`;
+        joystickKnob.style.top = `${containerCenter.y}px`;
+
+    </script>
+
+</body>
+</html>
